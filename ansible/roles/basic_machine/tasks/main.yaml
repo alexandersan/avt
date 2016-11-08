@@ -1,0 +1,16 @@
+---
+
+- name: update apt cache
+  apt:
+    update_cache: yes
+    cache_valid_time: "{{ apt_cache_valid_time }}"
+
+- name: upgrade system
+  apt:
+    upgrade: yes
+
+- name: add kernel extras
+  apt:
+    name: "linux-image-extra-{{ ansible_kernel }}"
+    state: present
+

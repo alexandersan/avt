@@ -1,0 +1,15 @@
+---
+
+- hosts: localhost
+  tasks:
+    - name: wait for hosts
+      wait_for:
+        port: 22
+        host: "{{ item }}"
+        search_regex: OpenSSH
+        delay: 10
+      with_items: "{{ groups[target_group| default(all)] }}"
+
+- hosts: "{{ target_group | default(all)}}"
+  roles: [ basic_machine ]
+  become: yes
