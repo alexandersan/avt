@@ -2,12 +2,14 @@
 
 source_credentials () {
   case $1 in
+    vagrant) return ;;
     amazon)
       export TF_VAR_access_key="$( awk -F ',' 'FNR==2{ print $2 }' $2 )"
       export TF_VAR_secret_key="$( awk -F ',' 'FNR==2{ print $3 }' $2 )"
       export AWS_ACCESS_KEY_ID="$TF_VAR_access_key"
       export AWS_SECRET_ACCESS_KEY="$TF_VAR_secret_key"
     ;;
+    azure) source $2 ;;
     google)
       echo "Not implemented yet"
       exit 1
@@ -34,7 +36,15 @@ do
 key="$1"
 
 case $key in
-  vagrant|amazon|google) #check for valid environment
+  help|-h|-?|--help)
+    cat << EOF
+Available environments: vagrant, amazon, azure, google
+Available commands: up, ansible, status, destroy
+N.B. For Amazon AWS, Azure or Google Cloud you must specify a valid credentials file.
+with -c|--credentials option (for example -c ~/Downloads/credentials.csv)
+EOF
+  ;;
+  vagrant|azure|amazon|google) #check for valid environment
     case $2 in
       # check for valid command
       up|ansible|destroy|status) COMMAND="$2" ;;
