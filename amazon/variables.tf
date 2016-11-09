@@ -54,5 +54,5 @@ variable "remote_user" {
 
 variable "private_key_path" {
   description = "path to private key"
-  default = "~/.ssh/terrafrom"
+  default = "~/.ssh/id_rsa"
 }
