@@ -1,13 +1,13 @@
 ---
 
-- name: update apt cache
+- name: install apt requirements
   apt:
-    update_cache: yes
-    cache_valid_time: "{{ apt_cache_valid_time }}"
+    pkg: aptitude
 
 - name: upgrade system
   apt:
-    upgrade: yes
+    upgrade: full
+    update_cache: yes
 
 - name: add kernel extras
   apt:

@@ -31,13 +31,6 @@ resource "azurerm_storage_account" "storage" {
     account_type = "${var.storage_type}"
 }
 
-resource "azurerm_storage_container" "container" {
-    name = "monyavhds"
-    resource_group_name = "${azurerm_resource_group.monya.name}"
-    storage_account_name = "${azurerm_storage_account.storage.name}"
-    container_access_type = "private"
-}
-
 resource "random_id" "password" {
   keepers = {
     # Generate a new id each time we switch to a new AMI id
@@ -64,6 +57,13 @@ resource "azurerm_network_interface" "iface" {
         private_ip_address_allocation = "dynamic"
         public_ip_address_id = "${azurerm_public_ip.pubip.id}"
     }
+}
+
+resource "azurerm_storage_container" "container" {
+    name = "monyavhds"
+    resource_group_name = "${azurerm_resource_group.monya.name}"
+    storage_account_name = "${azurerm_storage_account.storage.name}"
+    container_access_type = "private"
 }
 
 resource "azurerm_virtual_machine" "node" {
