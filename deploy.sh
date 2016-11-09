@@ -21,6 +21,18 @@ run_in () {
   cd "$DIR" && eval "$1"
 }
 
+f_help () {
+  echo "$1"
+  cat << EOF
+For help: -h, -?, --help, help
+Available environments: vagrant, amazon, azure, google
+Available commands: up, ansible, status, destroy
+N.B. For Amazon AWS, Azure or Google Cloud you must specify a valid credentials file.
+with -c|--credentials option (for example -c ~/Downloads/credentials.csv)
+EOF
+  exit $2
+}
+
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 key_name=${TF_VAR_key_name:-"terraform"}
@@ -36,25 +48,17 @@ do
 key="$1"
 
 case $key in
-  help|-h|-?|--help)
-    cat << EOF
-Available environments: vagrant, amazon, azure, google
-Available commands: up, ansible, status, destroy
-N.B. For Amazon AWS, Azure or Google Cloud you must specify a valid credentials file.
-with -c|--credentials option (for example -c ~/Downloads/credentials.csv)
-EOF
-  ;;
   vagrant|azure|amazon|google) #check for valid environment
     case $2 in
       # check for valid command
       up|ansible|destroy|status) COMMAND="$2" ;;
-      *) echo "ERROR: unsupported command" && exit 1 ;;
+      *) f_help "ERROR: unsupported command" 1 ;;
     esac
     ENVIRONMENT="$key"
     shift # past argument
   ;;
   -c|--credentials)
-    [ ! -f "$2" ] && echo "ERROR: invalid credentials file" && exit 1
+    [ ! -f "$2" ] && f_help "ERROR: invalid credentials file" 1
     CREDENTIALS="$2"
     shift # past argument
   ;;
@@ -62,16 +66,10 @@ EOF
 esac
 shift
 done
-if [ -n "$1" ]; then
-  cat << EOF
-ERROR: Unknown option $@
-Available environments: vagrant, amazon, google
-Available commands: up, ansible, status, destroy
-N.B. For Amazon AWS or Google Cloud you must specify a valid vredentials file.
-with -c|--credentials option (for example -c ~/Downloads/credentials.csv)
-EOF
-  exit 1
-fi
+case "$1" in
+  help|-h|-?|--help) f_help "deploy.sh help:" 0 ;;
+  *)                 f_help "ERROR: Unknown option $@" 1 ;;
+esac
 
 source "$DIR"/ansible/prepare.sh $ENVIRONMENT $DIR
 source_credentials $ENVIRONMENT $CREDENTIALS
