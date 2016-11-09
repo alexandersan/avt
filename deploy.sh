@@ -41,7 +41,7 @@ key_name=${TF_VAR_key_name:-"terraform"}
 
 playbook=${TF_VAR_ansible_playbook:-"ansible/deploy.yaml"}
 remote_user=${TF_VAR_remote_user:-"ubuntu"}
-private_key=${TF_VAR_private_key_path:-"~/.ssh/terraform"}
+private_key=${TF_VAR_private_key_path:-"~/.ssh/id_rsa"}
 
 while [[ $# -gt 1 ]] #process pairs of arguments
 do
@@ -66,10 +66,12 @@ case $key in
 esac
 shift
 done
-case "$1" in
-  help|-h|-?|--help) f_help "deploy.sh help:" 0 ;;
-  *)                 f_help "ERROR: Unknown option $@" 1 ;;
-esac
+if [ -n "$1" ]; then
+  case "$1" in
+    help|-h|-?|--help) f_help "deploy.sh help:" 0 ;;
+    *)                 f_help "ERROR: Unknown option $@" 1 ;;
+  esac
+fi
 
 source "$DIR"/ansible/prepare.sh $ENVIRONMENT $DIR
 source_credentials $ENVIRONMENT $CREDENTIALS
