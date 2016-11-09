@@ -7,7 +7,7 @@ variable "geo_region" {
 }
 
 variable "storage_type" {
-  default = "Standart LRS"
+  default = "Standard_LRS"
 }
 
 variable "SUBSCRIPTION_ID" {

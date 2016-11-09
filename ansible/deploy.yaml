@@ -8,8 +8,8 @@
         host: "{{ item }}"
         search_regex: OpenSSH
         delay: 10
-      with_items: "{{ groups[target_group| default(all)] }}"
+      with_items: "{{ groups[ target_group | default("all")] }}"
 
-- hosts: "{{ target_group | default(all)}}"
+- hosts: "{{ target_group | default("all")}}"
   roles: [ basic_machine ]
   become: yes

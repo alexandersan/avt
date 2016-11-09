@@ -1,0 +1,4 @@
+.vagrant
+*.tfstate
+*.backup
+*.retry
