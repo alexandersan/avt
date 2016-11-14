@@ -96,7 +96,7 @@ else
     up) run_in  "terraform apply $ENVIRONMENT" ;;
     status) run_in "terraform plan $ENVIRONMENT" ;;
     destroy) run_in "terraform destroy -force $ENVIRONMENT" ;;
-    ansible) run_in "ansible-playbook --private-key $private_key -u $remote_user -i ansible/ec2.py -e target_group=$key_name $playbook" ;;
+    ansible) run_in "ansible-playbook --private-key $private_key -u $remote_user -i ansible/ec2.py -e target_group=key_$key_name $playbook" ;;
   esac
 fi
 

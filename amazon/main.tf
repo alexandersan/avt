@@ -53,7 +53,7 @@ resource "aws_security_group" "default" {
 
 resource "aws_key_pair" "auth" {
   key_name   = "${var.key_name}"
-  public_key = "${file("${path.root}/../${var.public_key_path}")}"
+  public_key = "${file("${var.public_key_path}")}"
 }
 
 resource "aws_instance" "node"{
@@ -76,6 +76,6 @@ resource "null_resource" "cluster" {
   }
 
   provisioner "local-exec" {
-    command = "ansible-playbook -v --private-key=\"${var.private_key_path}\" -u ${var.remote_user} -i \"${join(",", aws_instance.node.*.public_ip)},\" ${path.root}/../${var.ansible_playbook}"
+    command = "ansible-playbook -v --private-key=\"${var.private_key_path}\" -u ${var.remote_user} -i ansible/ec2.py -e target_group=key_${var.key_name} ${var.ansible_playbook}"
   }
 }
