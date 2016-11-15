@@ -5,11 +5,21 @@
     - name: wait for hosts
       wait_for:
         port: 22
-        host: "{{ item }}"
+        host: "{{ hostvars[ item ].ansible_host | default(item) }}"
         search_regex: OpenSSH
         delay: 10
       with_items: "{{ groups[ target_group | default('all')] }}"
 
 - hosts: "{{ target_group | default('all')}}"
-  roles: [ basic_machine ]
+  pre_tasks:
+    - name: crete facts
+      set_fact:
+        "{{ hostvars[ item ].ec2_tag_Name }}": "{{ item }}"
+      when: "{{ (hostvars[ item ].ec2_tag_Name is defined) }}"
+      with_items: "{{ groups[ target_group | default('all') ] }}"
+
+  roles:
+    - basic_machine
+    - docker_machine
   become: yes
+

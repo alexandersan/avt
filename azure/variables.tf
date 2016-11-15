@@ -1,9 +1,13 @@
 variable "region" {
-  default = "West US"
+  default = "Southeast Asia"
 }
 
 variable "geo_region" {
-  default = "westus"
+  default = "southeastasia"
+}
+
+variable "name_prefix" {
+  default = "monya"
 }
 
 variable "storage_type" {

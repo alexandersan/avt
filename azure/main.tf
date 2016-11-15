@@ -6,26 +6,26 @@ provider "azurerm" {
 }
 
 resource "azurerm_resource_group" "monya" {
-    name = "monya_rg"
+    name = "${var.name_prefix}_rg"
     location = "${var.region}"
 }
 
 resource "azurerm_virtual_network" "network" {
-    name = "monya_net"
+    name = "${var.name_prefix}_net"
     address_space = ["10.2.0.0/16"]
     location = "${var.region}"
     resource_group_name = "${azurerm_resource_group.monya.name}"
 }
 
 resource "azurerm_subnet" "subnet" {
-    name = "monyasubnet"
+    name = "${var.name_prefix}subnet"
     resource_group_name = "${azurerm_resource_group.monya.name}"
     virtual_network_name = "${azurerm_virtual_network.network.name}"
     address_prefix = "10.2.2.0/24"
 }
 
 resource "azurerm_storage_account" "storage" {
-    name = "monyastorage"
+    name = "${var.name_prefix}storage"
     resource_group_name = "${azurerm_resource_group.monya.name}"
     location = "${var.geo_region}"
     account_type = "${var.storage_type}"
@@ -60,7 +60,7 @@ resource "azurerm_network_interface" "iface" {
 }
 
 resource "azurerm_storage_container" "container" {
-    name = "monyavhds"
+    name = "${var.name_prefix}vhds"
     resource_group_name = "${azurerm_resource_group.monya.name}"
     storage_account_name = "${azurerm_storage_account.storage.name}"
     container_access_type = "private"
@@ -113,6 +113,6 @@ resource "null_resource" "cluster" {
   }
 
   provisioner "local-exec" {
-      command = "ansible-playbook -v --private-key=\"${var.private_key_path}\" -u ${var.remote_user} -i \"${azurerm_public_ip.pubip.ip_address},\" ${path.root}/../${var.ansible_playbook}"
+      command = "ansible-playbook -v --private-key=\"${var.private_key_path}\" -u ${var.remote_user} -i ansible/azure_rm.py -e target_group=${var.name_prefix}_rg ${var.ansible_playbook}"
   }
 }

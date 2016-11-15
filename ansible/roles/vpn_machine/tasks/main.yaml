@@ -1,0 +1,16 @@
+---
+
+- name: add apt repo
+  apt_repository:
+    repo: "ppa:paskal-07/softethervpn"
+
+- name: upgrade system
+  apt:
+    upgrade: full
+    update_cache: yes
+
+- name: add kernel extras
+  apt:
+    name: "linux-image-extra-{{ ansible_kernel }}"
+    state: present
+
