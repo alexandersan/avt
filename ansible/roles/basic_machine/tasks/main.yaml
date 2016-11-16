@@ -6,7 +6,7 @@
 
 - name: upgrade system
   apt:
-    upgrade: full
+    upgrade: yes
     update_cache: yes
 
 - name: add kernel extras

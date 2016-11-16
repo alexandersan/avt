@@ -113,6 +113,6 @@ resource "null_resource" "cluster" {
   }
 
   provisioner "local-exec" {
-      command = "ansible-playbook -v --private-key=\"${var.private_key_path}\" -u ${var.remote_user} -i ansible/azure_rm.py -e target_group=${var.name_prefix}_rg ${var.ansible_playbook}"
+      command = "ansible-playbook -v --private-key=\"${var.private_key_path}\" -u ${var.remote_user} -e target_group=${var.name_prefix}_rg ${var.ansible_playbook}"
   }
 }

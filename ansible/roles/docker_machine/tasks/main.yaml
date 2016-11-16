@@ -1,10 +1,15 @@
 ---
 
+- name: upate apt cache
+  apt:
+    update_cache: yes
+  ignore_errors: yes
+  changed_when: False
+
 - name: install requirements
   apt:
     name: "{{ item }}"
     state: "present"
-    update_cache: yes
   with_items:
     - "apt-transport-https"
     - "ca-certificates"

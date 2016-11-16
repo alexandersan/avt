@@ -8,8 +8,17 @@ source_credentials () {
       export TF_VAR_secret_key="$( awk -F ',' 'FNR==2{ print $3 }' $2 )"
       export AWS_ACCESS_KEY_ID="$TF_VAR_access_key"
       export AWS_SECRET_ACCESS_KEY="$TF_VAR_secret_key"
+      export ANSIBLE_INVENTORY="ansible/ec2.py"
+      export ANSIBLE_TARGET_GROUP="key_${TF_VAR_key_name:-'terraform'}"
     ;;
-    azure) source $2 ;;
+    azure)
+      export TF_VAR_SUBSCRIPTION_ID="$( awk -F '=' 'FNR==2{ print $2 }' $2 )"
+      export TF_VAR_CLIENT_ID="$( awk -F '=' 'FNR==3{ print $2 }' $2 )"
+      export TF_VAR_CLIENT_SECRET="$( awk -F 'secret=' 'FNR==4{ print $2 }' $2 )"
+      export TF_VAR_TENANT_ID="$( awk -F '=' 'FNR==5{ print $2 }' $2 )"
+      export ANSIBLE_INVENTORY="ansible/azure_rm.py"
+      export ANSIBLE_TARGET_GROUP="${TF_VAR_name_prefix:-'monya'}_rg"
+    ;;
     google)
       echo "Not implemented yet"
       exit 1
@@ -34,11 +43,10 @@ EOF
 }
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-
-key_name=${TF_VAR_key_name:-"terraform"}
+export ANSIBLE_CONFIG="$DIR/ansible/ansible.cfg"
+export ANSIBLE_STDOUT_CALLBACK=debug
 
 # Default variables
-
 playbook=${TF_VAR_ansible_playbook:-"ansible/deploy.yaml"}
 remote_user=${TF_VAR_remote_user:-"ubuntu"}
 private_key=${TF_VAR_private_key_path:-"~/.ssh/id_rsa"}
@@ -73,7 +81,6 @@ if [ -n "$1" ]; then
   esac
 fi
 
-source "$DIR"/ansible/prepare.sh $ENVIRONMENT $DIR
 source_credentials $ENVIRONMENT $CREDENTIALS
 
 if [ "$ENVIRONMENT" == "vagrant" ]
@@ -96,7 +103,7 @@ else
     up) run_in  "terraform apply $ENVIRONMENT" ;;
     status) run_in "terraform plan $ENVIRONMENT" ;;
     destroy) run_in "terraform destroy -force $ENVIRONMENT" ;;
-    ansible) run_in "ansible-playbook --private-key $private_key -u $remote_user -i ansible/ec2.py -e target_group=key_$key_name $playbook" ;;
+    ansible) run_in "ansible-playbook --private-key $private_key -u $remote_user -e target_group=$ANSIBLE_TARGET_GROUP $playbook" ;;
   esac
 fi
 
