@@ -1,6 +1,7 @@
 ---
 
 - hosts: localhost
+  gather_facts: no
   tasks:
     - name: wait for hosts
       wait_for:
@@ -11,6 +12,7 @@
       with_items: "{{ groups[ target_group | default('all')] }}"
 
 - hosts: "{{ target_group | default('all')}}"
+  become: yes
   pre_tasks:
     - name: crete facts
       set_fact:
@@ -21,5 +23,5 @@
   roles:
     - basic_machine
     - docker_machine
-  become: yes
+    - vpn_machine
 
