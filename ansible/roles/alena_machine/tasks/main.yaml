@@ -1,0 +1,7 @@
+---
+
+- name: add apt repo
+  apt_repository:
+    repo: "ppa:paskal-07/softethervpn"
+    update_cache: yes
+
