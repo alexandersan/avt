@@ -3,15 +3,21 @@
 - hosts: localhost
   gather_facts: no
   tasks:
+    - debug: msg="Wait for {{ groups[ target_group | default('all') ] }}"
+    - debug:
+        msg: "Host IP  {{ hostvars[ item ].ansible_host | default( hostvars[ item ].ansible_ssh_host | default(item)) }}"
+      with_items: "{{ groups[ target_group | default('all')] }}"
+
     - name: wait for hosts
       wait_for:
         port: 22
-        host: "{{ hostvars[ item ].ansible_host | default(item) }}"
+        host: "{{ hostvars[ item ].ansible_ssh_host | default( hostvars[ item ].ansible_host | default(item)) }}"
         search_regex: OpenSSH
         delay: 10
       with_items: "{{ groups[ target_group | default('all')] }}"
 
 - hosts: "{{ target_group | default('all')}}"
+  gather_facts: yes
   become: yes
   pre_tasks:
     - name: crete facts
@@ -20,8 +26,16 @@
       when: "{{ (hostvars[ item ].ec2_tag_Name is defined) }}"
       with_items: "{{ groups[ target_group | default('all') ] }}"
 
+    - name: upate apt cache
+      apt:
+        update_cache: yes
+      ignore_errors: yes
+      changed_when: False
+
+    - debug: msg="Hello from host {{ ansible_host }}"
+
   roles:
     - basic_machine
     - docker_machine
-    - vpn_machine
+    #    - alena_machine
 

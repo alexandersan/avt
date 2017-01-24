@@ -6,29 +6,29 @@ provider "azurerm" {
 }
 
 resource "azurerm_resource_group" "monya" {
-    name = "${var.name_prefix}_rg"
-    location = "${var.region}"
+  name = "${var.name_prefix}_rg"
+  location = "${var.region}"
 }
 
 resource "azurerm_virtual_network" "network" {
-    name = "${var.name_prefix}_net"
-    address_space = ["10.2.0.0/16"]
-    location = "${var.region}"
-    resource_group_name = "${azurerm_resource_group.monya.name}"
+  name = "${var.name_prefix}_net"
+  address_space = ["10.2.0.0/16"]
+  location = "${var.region}"
+  resource_group_name = "${azurerm_resource_group.monya.name}"
 }
 
 resource "azurerm_subnet" "subnet" {
-    name = "${var.name_prefix}subnet"
-    resource_group_name = "${azurerm_resource_group.monya.name}"
-    virtual_network_name = "${azurerm_virtual_network.network.name}"
-    address_prefix = "10.2.2.0/24"
+  name = "${var.name_prefix}subnet"
+  resource_group_name = "${azurerm_resource_group.monya.name}"
+  virtual_network_name = "${azurerm_virtual_network.network.name}"
+  address_prefix = "10.2.2.0/24"
 }
 
 resource "azurerm_storage_account" "storage" {
-    name = "${var.name_prefix}storage"
-    resource_group_name = "${azurerm_resource_group.monya.name}"
-    location = "${var.geo_region}"
-    account_type = "${var.storage_type}"
+  name = "${var.name_prefix}storage"
+  resource_group_name = "${azurerm_resource_group.monya.name}"
+  location = "${var.geo_region}"
+  account_type = "${var.storage_type}"
 }
 
 resource "random_id" "password" {
@@ -40,71 +40,73 @@ resource "random_id" "password" {
 }
 
 resource "azurerm_public_ip" "pubip" {
-    name = "publicip"
-    location = "${var.region}"
-    resource_group_name = "${azurerm_resource_group.monya.name}"
-    public_ip_address_allocation = "static"
+  name = "publicip"
+  location = "${var.region}"
+  resource_group_name = "${azurerm_resource_group.monya.name}"
+  public_ip_address_allocation = "static"
 }
 
 resource "azurerm_network_interface" "iface" {
-    name = "iface"
-    location = "${var.region}"
-    resource_group_name = "${azurerm_resource_group.monya.name}"
+  name = "iface"
+  location = "${var.region}"
+  resource_group_name = "${azurerm_resource_group.monya.name}"
 
-    ip_configuration {
-        name = "netconfiguration1"
-        subnet_id = "${azurerm_subnet.subnet.id}"
-        private_ip_address_allocation = "dynamic"
-        public_ip_address_id = "${azurerm_public_ip.pubip.id}"
-    }
+  ip_configuration {
+      name = "netconfiguration1"
+      subnet_id = "${azurerm_subnet.subnet.id}"
+      private_ip_address_allocation = "dynamic"
+      public_ip_address_id = "${azurerm_public_ip.pubip.id}"
+  }
 }
 
 resource "azurerm_storage_container" "container" {
-    name = "${var.name_prefix}vhds"
-    resource_group_name = "${azurerm_resource_group.monya.name}"
-    storage_account_name = "${azurerm_storage_account.storage.name}"
-    container_access_type = "private"
+  name = "${var.name_prefix}vhds"
+  resource_group_name = "${azurerm_resource_group.monya.name}"
+  storage_account_name = "${azurerm_storage_account.storage.name}"
+  container_access_type = "private"
 }
 
 resource "azurerm_virtual_machine" "node" {
-    count = "${var.number_of_vms}"
-    name = "${format("node-%03d", count.index )}"
-    location = "${var.region}"
-    resource_group_name = "${azurerm_resource_group.monya.name}"
-    network_interface_ids = ["${azurerm_network_interface.iface.id}"]
-    vm_size = "${var.instance_type}"
+  count = "${var.number_of_vms}"
+  name = "${format("node-%03d", count.index )}"
+  location = "${var.region}"
+  resource_group_name = "${azurerm_resource_group.monya.name}"
+  network_interface_ids = ["${azurerm_network_interface.iface.id}"]
+  vm_size = "${var.instance_type}"
+  delete_os_disk_on_termination = true
 
-    storage_image_reference {
-        publisher = "Canonical"
-        offer = "UbuntuServer"
-        sku = "${var.os_type}"
-        version = "latest"
-    }
+  storage_image_reference {
+      publisher = "Canonical"
+      offer = "UbuntuServer"
+      sku = "${var.os_type}"
+      version = "latest"
+  }
 
-    storage_os_disk {
-        name = "${format("osdrive-%03d", count.index )}"
-        vhd_uri = "${azurerm_storage_account.storage.primary_blob_endpoint}${azurerm_storage_container.container.name}/${format("osdrive-%03d", count.index)}.vhd"
-        caching = "ReadWrite"
-        create_option = "FromImage"
-    }
+  storage_os_disk {
+      name = "${format("osdrive-%03d", count.index )}"
+      vhd_uri = "${azurerm_storage_account.storage.primary_blob_endpoint}${azurerm_storage_container.container.name}/${format("osdrive-%03d", count.index)}.vhd"
+      caching = "ReadWrite"
+      disk_size_gb = 100
+      create_option = "FromImage"
+  }
 
-    os_profile {
-        computer_name = "${format("node-%03d", count.index )}"
-        admin_username = "${random_id.password.keepers.admin_username}"
-        admin_password = "${random_id.password.hex}"
-    }
+  os_profile {
+    computer_name = "${format("node-%03d", count.index )}"
+      admin_username = "${random_id.password.keepers.admin_username}"
+      admin_password = "${random_id.password.hex}"
+  }
 
-    os_profile_linux_config {
-        disable_password_authentication = true
-        ssh_keys {
-            path = "/home/${var.remote_user}/.ssh/authorized_keys"
-            key_data = "${file("${var.public_key_path}")}"
-        }
-    }
+  os_profile_linux_config {
+      disable_password_authentication = true
+      ssh_keys {
+          path = "/home/${var.remote_user}/.ssh/authorized_keys"
+          key_data = "${file("${var.public_key_path}")}"
+      }
+  }
 
-    tags {
-        environment = "test"
-    }
+  tags {
+      environment = "test"
+  }
 }
 
 resource "null_resource" "cluster" {

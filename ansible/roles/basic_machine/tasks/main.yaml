@@ -3,11 +3,11 @@
 - name: install apt requirements
   apt:
     pkg: aptitude
+    state: present
 
 - name: upgrade system
   apt:
     upgrade: yes
-    update_cache: yes
 
 - name: add kernel extras
   apt:

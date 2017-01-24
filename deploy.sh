@@ -2,7 +2,9 @@
 
 source_credentials () {
   case $1 in
-    vagrant) return ;;
+    vagrant)
+      export ANSIBLE_TARGET_GROUP="all"
+    ;;
     amazon)
       export TF_VAR_access_key="$( awk -F ',' 'FNR==2{ print $2 }' $2 )"
       export TF_VAR_secret_key="$( awk -F ',' 'FNR==2{ print $3 }' $2 )"
@@ -91,7 +93,7 @@ then
     destroy) run_in "vagrant destroy" ;;
     ansible)
       if [ -f "$DIR/.vagrant/provisioners/ansible/inventory/vagrant_ansible_inventory" ]; then
-        run_in "ansible-playbook -i .vagrant/provisioners/ansible/inventory/vagrant_ansible_inventory $playbook"
+        run_in "ansible-playbook -i .vagrant/provisioners/ansible/inventory/vagrant_ansible_inventory -e target_group=$ANSIBLE_TARGET_GROUP $playbook"
       else
         echo "Error: No inventory file, please run 'deploy.sh vagrant up' first."
         exit 1
@@ -103,7 +105,7 @@ else
     up) run_in  "terraform apply $ENVIRONMENT" ;;
     status) run_in "terraform plan $ENVIRONMENT" ;;
     destroy) run_in "terraform destroy -force $ENVIRONMENT" ;;
-    ansible) run_in "ansible-playbook --private-key $private_key -u $remote_user -e target_group=$ANSIBLE_TARGET_GROUP $playbook" ;;
+    ansible) run_in "ansible-playbook -v --private-key $private_key -u $remote_user -e target_group=$ANSIBLE_TARGET_GROUP $playbook" ;;
   esac
 fi
 

@@ -1,0 +1,17 @@
+---
+
+- name: add kernel extras
+  apt_repository:
+    repo: "ppa:transmissionbt/ppa"
+    state: "present"
+    update_cache: "yes"
+
+- name: install packages
+  apt:
+    name: "{{ item }}"
+    state: "present"
+  with_items:
+    - "transmission-cli"
+    - "transmission-common"
+    - "transmission-daemon"
+
